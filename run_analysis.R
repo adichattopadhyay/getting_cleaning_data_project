@@ -16,7 +16,7 @@ activities   <- read.table(file= paste(DATADIR, "activity_labels.txt", sep = "/"
 y_test       <- read.table(paste(DATADIR, "test", "y_test.txt",        sep = "/"),
                          col.names = c("Activity.ID"))
 y_activities <- merge(y_test, activities, by.x="Activity.ID", by.y="Activity.ID")
-Activities   <- y_activities[,2]
+Activity     <- y_activities[,2]
 
 features     <- read.table(paste(DATADIR, "features.txt", sep ="/"), 
                            col.names = c("Feature.Number", "Feature.Name"))
@@ -27,20 +27,28 @@ subject_test <- read.table(file = paste(DATADIR, "test", "subject_test.txt", sep
 x_test       <- read.table(file = paste(DATADIR, "test", "X_test.txt", sep = "/"),
                            col.names = features)
 
-test_data    <- cbind(subject_test, Activities, x_test)
+test_data    <- cbind(subject_test, Activity, x_test)
 
 # Combine Training Data
 y_train       <- read.table(paste(DATADIR, "train", "y_train.txt",        sep = "/"),
-                           col.names = c("Activity.ID"))
+                            col.names = c("Activity.ID"))
 y_activities  <- merge(y_train, activities, by.x="Activity.ID", by.y="Activity.ID")
-Activities    <- y_activities[,2]
+Activity      <- y_activities[,2]
 
 subject_train <- read.table(file = paste(DATADIR, "train", "subject_train.txt", sep = "/"),
-                           col.names = c("Subject"))
+                            col.names = c("Subject"))
 x_train       <- read.table(file = paste(DATADIR, "train", "X_train.txt", sep = "/"),
-                           col.names = features)
+                            col.names = features)
 
-train_data    <- cbind(subject_train, Activities, x_train)
+train_data    <- cbind(subject_train, Activity, x_train)
 
 # Combine Test & Train data
 data          <- rbind(test_data, train_data)
+
+# Keep only the columns that are mean or standard deviation
+data_mean_std <- data[,c("Subject",
+                         "Activity",
+                         grep("mean|std", colnames(data), value=TRUE))
+                      ]
+sub_act_data  <- melt(data_mean_std, id.vars=c("Subject","Activity"))
+tidy_data     <- dcast(sub_act_data, Subject + Activity ~ variable, mean)
